@@ -23,7 +23,7 @@ except:
 #import aws_utils
 import config_constants
 
-__version__ = ".9.1.6"
+#__version__ = ".9.1.6"
 
 # set default values to vacuum, analyze variables
 goback_no_of_days = -1
