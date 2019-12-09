@@ -1,3 +1,4 @@
+#'''!# /export/tools/python37/bin/python'''
 from __future__ import print_function
 
 import datetime
@@ -10,15 +11,17 @@ import socket
 import boto3
 import datetime
 #import pg8000
-import pyscopg2
+import psycopg2
 #import pgpasslib
+import argparse
+from getpass import getpass
 
 try:
 	 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 except:
 	 pass
 
-#import aws_utils
+import aws_utils
 import config_constants
 
 __version__ = ".9.1.6"
@@ -87,102 +90,71 @@ def print_statements(statements):
 				print(s)
 
 
-def get_pg_conn(db_host='afpe99-poc.cznkyrgol3ch.us-east-2.redshift.amazonaws.com', db='fpe99poc_east2', db_user='dbuser', 
-					 schema_name='FPESFA', db_port=5439, query_group=None, query_slot_count=1, ssl=True, **kwargs):
-	conn = None
 
+def get_pg_conn(db_host, db, db_user, db_pwd, schema_name, db_port=5439, query_group=None, query_slot_count=1, ssl=True):
+	conn = None
+	#print(db_user)
+	#print(db)
 	if debug:
 		comment('Connect %s:%s:%s:%s' % (db_host, db_port, db, db_user))
-
+	#db_pwd = getpass('password')
+	#config = { 'dbname': 'db','user':'db_user', 'db_pwd':db_pwd, 'host':'db_host', 'port':'5439'}
 	try:
-		#conn = pg8000.connect(user=db_user, host=db_host, port=int(db_port), database=db, password=db_pwd, ssl=ssl, timeout=None)
-		conn = psycopg2.connect(user=db_user, host=db_host, port=int(db_port), dbname=db, password='Temp#123', sslmode = 'require')
-		conn._usock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-		conn.autocommit = True
+		#connection = Postgres._instance.connection = psycopg2.connect(**db_config)
+		#cursor = Postgres._instance.cursor = connection.cursor()
+			
+		#def connect(self):#, initdb=False):
+		#conn_str = {"dbname=%s user=%s host=%s port=%s" % (self.config['dbnmae','db'],
+		#								self.config['user', 'db_user'],
+		#								self.config['password', db_pwd],
+		#								self.config.get('host', 'db_host'),
+		#								self.config.get('port', 'db_port'))}
+		#		log.info('Connecting to %s' % conn_str)
+		#		conn_str += ' password=%s' % self.config['password']
+		#		self.connection = psycopg2.connect(conn_str)
+		#		self.cursor = self.connection.cursor()
+		#		self.set_schema()
+		#		log.debug("Connected to database %s" % (self.config['database']))'''
+		#	
+		#except Exception as e:
+		
+
+		#conn =	pg8000.connect(user=db_user, host=db_host, port=int(db_port), database=db, password=db_pwd, ssl=ssl, timeout=None)
+		#from psycopg2 import connect
+		#credentials= {"user":"db_user","host":"db_host","port":int(db_port),"dbname":"db","password":"db_pwd","sslmode":"require", **kwargs}
+		#conn = connect(**)
+		#conn = psycopg2.connect(**kwargs)
+		print("Into the try block")
+		print(db_user)
+		print(db)
+		conn =	psycopg2.connect(host=db_host, dbname=db, user=db_user, password='db_pwd', port=int(db_port), sslmode='require')
+		#print("db_user: %s")
+		#print("database name:" dbname)
+		#conn = psycopg2.connect(user=db_user, host=db_host, port=db_port, dbname=db, password=db_pwd, sslmode ='require')
+		#print("hiiiii3")
+		#conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')
+		#print("conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')")
+		#conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')
+		print("connected")
+		#conn._usock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+		#conn.autocommit = True		
+		
 	except Exception as e:
-		print("Exception on Connect to Cluster: %s" % e)
+		print("Exception on Connect to Cluster: %s" %e)
 		print('Unable to connect to Cluster Endpoint')
-		cleanup(conn)
+		#log.error("Cannot connect to database '%s'" % (self.config['database']))			
+		#cleanup(conn)
+		raise(e)
+	return conn
 
-		return None
 
-
-# --------------------set search paths-------------------------------
+	# --------------------set search paths-------------------------------
 	 
-'''// replaced the search path with the instead using as an external package//'''
-	 
-	 #aws_utils.set_search_paths(conn, schema_name, exclude_external_schemas=True)  
+	'''// replaced the search path with the instead using as an external package//'''
+	aws_utils.set_search_paths(conn, schema_name, exclude_external_schemas=True)  
 
-debug = False
 
-###########################################################################################################
-# emit a single cloudwatch metric with the given dimensions
-#def put_metric(cw, namespace, metric_name, dimensions, timestamp, value, unit):
-#	emit_metrics(cw, namespace, [{
-#		'MetricName': metric_name,
-#		'Dimensions': dimensions,
-#		'Timestamp': datetime.datetime.utcnow() if timestamp is None else timestamp,
-#		'Value': value,
-#		'Unit': unit
-#	}])
-#
-##-- emit all the provided cloudwatch metrics consistent with API limits around batching
-#def emit_metrics(cw, namespace, put_metrics):
-#	max_metrics = 20
-#	group = 0
-#	print("Publishing %s CloudWatch Metrics" % (len(put_metrics)))
-#
-#	for x in range(0, len(put_metrics), max_metrics):
-#		group += 1
-#
-#		# slice the metrics into blocks of 20 or just the remaining metrics
-#		put = put_metrics[x:(x + max_metrics)]
-#
-#		if debug:
-#			print("Metrics group %s: %s Datapoints" % (group, len(put)))
-#			print(put)
-#		try:
-#			cw.put_metric_data(
-#				Namespace=namespace,
-#				MetricData=put
-#			)
-#		except:
-#			print('Pushing metrics to CloudWatch failed: exception %s' % sys.exc_info()[1])
-###############################################################################################################
-
-def set_search_paths(conn, schema_name, set_target_schema=None, exclude_external_schemas=False):
-	get_schemas_statement = '''
-		select nspname
-		from pg_catalog.pg_namespace
-		where nspname ~ '%s'
-	''' % schema_name
-
-	if exclude_external_schemas is True:
-		get_schemas_statement += " and nspname not in (select schemaname from svv_external_schemas)"
-
-	# set default search path
-	search_path = 'set search_path = \'$user\',public'
-
-	# add the target schema to the search path
-	if set_target_schema is not None and set_target_schema != schema_name:
-		search_path = search_path + ', %s' % set_target_schema
-
-	# add all matched schemas to the search path - this could be a single schema, or a pattern
-	c = conn.cursor()
-	c.execute(get_schemas_statement)
-	results = c.fetchall()
-
-	for r in results:
-		search_path = search_path + ', %s' % r[0]
-
-	if debug:
-		print(search_path)
-
-	c = conn.cursor()
-	c.execute(search_path)
-
-# query group
-
+	# query group
 	if query_group is not None and query_group != '':
 		set_query_group = 'set query_group to %s' % query_group
 
@@ -200,7 +172,7 @@ def set_search_paths(conn, schema_name, set_target_schema=None, exclude_external
 			comment(set_slot_count)
 		run_commands(conn, [set_slot_count])
 
-# set a long statement timeout
+	# set a long statement timeout
 	set_timeout = "set statement_timeout = '36000000'"
 
 	if debug:
@@ -208,7 +180,7 @@ def set_search_paths(conn, schema_name, set_target_schema=None, exclude_external
 
 	run_commands(conn, [set_timeout])
 
-# set application name
+	# set application name
 	set_name = "set application_name to 'AnalyzeVacuumUtility-v%s'" % __version__
 
 	if debug:
@@ -711,16 +683,17 @@ def run_analyze_vacuum(**kwargs):
 #				print(traceback.format_exc())
 #	else:
 #		if debug:
-#			comment("Suppressing CloudWatch connection and metrics export")
+#				comment("Suppressing CloudWatch connection and metrics export")
 #######################################################################################################
 	 # extract the cluster name
 	if config_constants.CLUSTER_NAME in kwargs:
-		cluster_name = kwargs[config_constants.CLUSTER_NAME]
+		cluster_name = str(kwargs[config_constants.CLUSTER_NAME])
 
 		# remove the cluster name argument from kwargs as it's a positional arg
 		del kwargs[config_constants.CLUSTER_NAME]
 	else:
-		cluster_name = kwargs[config_constants.DB_HOST].split('.')[0]
+		cluster_name = kwargs[config_constants.DB_HOST]#.split('.')[0]
+		print(config_constants.DB_HOST)
 
 	if debug:
 		comment("Using Cluster Name %s" % cluster_name)
@@ -729,36 +702,64 @@ def run_analyze_vacuum(**kwargs):
 		print(kwargs)
 
 	 # get the password using .pgpass, environment variables, and then fall back to config
-###############################################################################################
-#	db_pwd = None
+	db_pwd = None
+#############################################################################################################
+#import 
 #	try:
 #		db_pwd = pgpasslib.getpass(kwargs[config_constants.DB_HOST], kwargs[config_constants.DB_PORT],
 #			kwargs[config_constants.DB_NAME], kwargs[config_constants.DB_USER])
 #	except pgpasslib.FileNotFound as e:
 #		pass
-#
-#	if db_pwd is None:
-#		db_pwd = kwargs[config_constants.DB_PASSWORD]
-#
-#	if config_constants.SCHEMA_NAME not in kwargs:
-#		kwargs[config_constants.SCHEMA_NAME] = 'public'
-##################################################################################################
+##############################################################################################################
+	#try:
+		#db_pwd = getpass('password')
+	#except exception as e:
+		#print("Wrong passwod: Authentication failed")
+	if db_pwd is None:
+		kwargs[config_constants.DB_PASSWORD] = db_pwd
+
+	if config_constants.SCHEMA_NAME not in kwargs:
+		kwargs[config_constants.SCHEMA_NAME] = 'public'
+	'''
+	# get a connection for the controlling processes
+	parser=argparse.Argumentparser()
+	parser.add_argument("--db_host",type=str,required=True)
+	parser.add_argument("--db_name",type=str,required=True)	
+	parser.add_argument("--db_pwd",type=str,required=True)
+	parser.add_argument("--db_user",type=str,required=True)
+	parser.add_argument("--db_schemaname",type=str,required=True)
+	parser.add_argument("--db_port",type=int,required=True)
+	parser.add_argument("--db_querygroup",type=str,required=False)
+	args=parser.parse_args()
+	DB_HOST=args.db_host
+	DB_NAME=args.db_name
+	db_pwd=args.db_pwd
+	DB_USER=args.db_user
+	SCHEMA_NAME=args.db_schemaname
+	DB_PORT = args.db_port
+	'''
+	
 	# get a connection for the controlling processes
 	master_conn = get_pg_conn(kwargs[config_constants.DB_HOST],
 					kwargs[config_constants.DB_NAME],
+					kwargs[config_constants.DB_PASSWORD],
 					kwargs[config_constants.DB_USER],
 					kwargs[config_constants.SCHEMA_NAME],
 					kwargs[config_constants.DB_PORT],
-					None if config_constants.QUERY_GROUP not in kwargs else kwargs[
-					config_constants.QUERY_GROUP],
-					None if config_constants.QUERY_SLOT_COUNT not in kwargs else kwargs[
-					config_constants.QUERY_SLOT_COUNT],
+					None if config_constants.QUERY_GROUP not in kwargs else kwargs[config_constants.QUERY_GROUP],
+					None if config_constants.QUERY_SLOT_COUNT not in kwargs else kwargs[config_constants.QUERY_SLOT_COUNT],
 					None if config_constants.SSL not in kwargs else kwargs[config_constants.SSL])
-
+	#print("kwargs[config_constants.DB_HOST]", kwargs[config_constants.DB_HOST])
+	#print("config_constants.DB_HOST", config_constants.DB_HOST)
+	#print("kwargs[config_constants.DB_USER]", config_constants.DB_USER)
+	
+	#master_conn=get_pg_conn(db_host, db_name, db_user, db_pwd)
+	#master_conn=get_pg_conn(DB_HOST,DB_NAME,DB_USER,db_pwd,SCHEMA_NAME,DB_PORT)
+	print(master_conn)
 	if master_conn is None:
 		raise Exception("No Connection was established")
 
-		vacuum_flag = kwargs[config_constants.DO_VACUUM] if config_constants.DO_VACUUM in kwargs else False
+	vacuum_flag = kwargs[config_constants.DO_VACUUM] if config_constants.DO_VACUUM in kwargs else False
 	if vacuum_flag is True:
 		# Run vacuum based on the Unsorted , Stats off and Size of the table
 		run_vacuum(master_conn, cluster_name, cw, **kwargs)
