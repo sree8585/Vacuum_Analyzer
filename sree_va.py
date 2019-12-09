@@ -97,53 +97,19 @@ def get_pg_conn(db_host, db, db_user, db_pwd, schema_name, db_port=5439, query_g
 	#print(db)
 	if debug:
 		comment('Connect %s:%s:%s:%s' % (db_host, db_port, db, db_user))
-	#db_pwd = getpass('password')
-	#config = { 'dbname': 'db','user':'db_user', 'db_pwd':db_pwd, 'host':'db_host', 'port':'5439'}
 	try:
-		#connection = Postgres._instance.connection = psycopg2.connect(**db_config)
-		#cursor = Postgres._instance.cursor = connection.cursor()
-			
-		#def connect(self):#, initdb=False):
-		#conn_str = {"dbname=%s user=%s host=%s port=%s" % (self.config['dbnmae','db'],
-		#								self.config['user', 'db_user'],
-		#								self.config['password', db_pwd],
-		#								self.config.get('host', 'db_host'),
-		#								self.config.get('port', 'db_port'))}
-		#		log.info('Connecting to %s' % conn_str)
-		#		conn_str += ' password=%s' % self.config['password']
-		#		self.connection = psycopg2.connect(conn_str)
-		#		self.cursor = self.connection.cursor()
-		#		self.set_schema()
-		#		log.debug("Connected to database %s" % (self.config['database']))'''
-		#	
-		#except Exception as e:
-		
-
 		#conn =	pg8000.connect(user=db_user, host=db_host, port=int(db_port), database=db, password=db_pwd, ssl=ssl, timeout=None)
-		#from psycopg2 import connect
-		#credentials= {"user":"db_user","host":"db_host","port":int(db_port),"dbname":"db","password":"db_pwd","sslmode":"require", **kwargs}
-		#conn = connect(**)
-		#conn = psycopg2.connect(**kwargs)
 		print("Into the try block")
 		print(db_user)
 		print(db)
 		conn =	psycopg2.connect(host=db_host, dbname=db, user=db_user, password='db_pwd', port=int(db_port), sslmode='require')
-		#print("db_user: %s")
-		#print("database name:" dbname)
-		#conn = psycopg2.connect(user=db_user, host=db_host, port=db_port, dbname=db, password=db_pwd, sslmode ='require')
-		#print("hiiiii3")
-		#conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')
-		#print("conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')")
-		#conn = psycopg2.connect(user='dbuser', host='dfpe01.cjmnymsfbut0.us-east-1.redshift.amazonaws.com', port=5439, dbname='fpe01', password='Temp#123', sslmode='require')
 		print("connected")
-		#conn._usock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-		#conn.autocommit = True		
+		conn._usock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+		conn.autocommit = True		
 		
 	except Exception as e:
 		print("Exception on Connect to Cluster: %s" %e)
 		print('Unable to connect to Cluster Endpoint')
-		#log.error("Cannot connect to database '%s'" % (self.config['database']))			
-		#cleanup(conn)
 		raise(e)
 	return conn
 
