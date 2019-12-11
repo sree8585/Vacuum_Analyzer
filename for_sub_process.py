@@ -54,17 +54,27 @@ def execute_query(conn, query):
 			comment('Query Execution returned %s Results' % (len(results)))
 		#except pg8000.ProgrammingError as e: #---- line replaced
 	except psycopg2.ProgrammingError as e:
-		if db_pwd is None:
-			process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			stdout, stderr = process.communicate(db_pwd[0])
+		#if db_pwd is None:
+			#process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			#stdout, stderr = process.communicate(db_pwd[0])
 		if "no result set" in str(e):
 			return None
 		else:
 			raise e
 
 	return results
+'''
+def Npass(process = None):
+	
 
+	try:
+	
+		if db_pwd is None:
+			process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			stdout, stderr = process.communicate(db_pwd[0])
+	except e:
 
+'''
 def close_conn(conn):
 	try:
 		conn.close()
@@ -99,25 +109,32 @@ def get_pg_conn(db_host, db, db_user, db_pwd, schema_name, db_port=5439, query_g
 	conn = None
 	if debug:
 		comment('Connect %s:%s:%s:%s' % (db_host, db_port, db, db_user))
-		
-	try:
-		conn = psycopg2.connect(user=db_user, host=db_host, port=int(db_port), dbname=db, password=db_pwd, sslmode='require')
-		print("Connected Database: ", db)
-		print("Schema Name: ", schema_name)
-		print("Data base user is: ", db_user)
-		#print("The password entered is: ", db_pwd)
-		#print("pwd:encoded: ", encrypted_pwd)
-		#conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-		conn.autocommit = True
-	except Exception as e:
-		
-		print("Exception on Connect to Cluster: %s" % e)
-		print('Unable to connect to Cluster Endpoint')
-		#cleanup(conn)
-		#raise e
+	if db_pwd is not None:
+				
+		try:
+			conn = psycopg2.connect(user=db_user, host=db_host, port=int(db_port), dbname=db, password=db_pwd, sslmode='require')
+			print("Connected Database: ", db)
+			print("Schema Name: ", schema_name)
+			print("Data base user is: ", db_user)
+			#print("The password entered is: ", db_pwd)
+			#print("pwd:encoded: ", encrypted_pwd)
+			#conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+			#conn.autocommit = True
+		except Exception as e:
+			#process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			#stdout, stderr = process.communicate(db_pwd[0])
+			print("Exception on Connect to Cluster: %s" % e)
+			print('Unable to connect to Cluster Endpoint')
+			#cleanup(conn)
+			#raise e
+			#return conn
+	else:
+		process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		stdout, stderr = process.communicate()
 		return conn
 
 	# set search paths
+	#if conn = True
 	aws_utils.set_search_paths(conn, schema_name, exclude_external_schemas=True)
 
 	if query_group is not None and query_group != '':
@@ -155,18 +172,7 @@ def get_pg_conn(db_host, db, db_user, db_pwd, schema_name, db_port=5439, query_g
 	comment("Connected to %s:%s:%s as %s" % (db_host, db_port, db, db_user))
 
 	return conn
-'''
-def Npass(process = None):
-	
 
-	try:
-	
-		if db_pwd is None:
-			process = subprocess.Popen(['sh', '/home/s5uvmm/admin/test'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			stdout, stderr = process.communicate(db_pwd[0])
-	except e:
-		print(process)
-'''
 def run_commands(conn, commands, cw=None, cluster_name=None, suppress_errors=False):
 	for idx, c in enumerate(commands, start=1):
 		if c is not None:
@@ -688,7 +694,7 @@ def run_analyze_vacuum(**kwargs):
 		kwargs[config_constants.SCHEMA_NAME] = 'public'
 	
 	#encrypt the password from environment variable, place into config
-	
+	'''
 	encrypted_pwd = None
 	try:
 		pwd = kwargs[config_constants.DB_PASSWORD]
@@ -701,7 +707,7 @@ def run_analyze_vacuum(**kwargs):
 	if encrypted_pwd is None:
 		encrypted_pwd = base64.b64encode(b'db_pwd')
 		print("encrypted: ", encrypted_pwd)	
-
+	'''
 	# get a connection for the controlling processes
 	master_conn = get_pg_conn(kwargs[config_constants.DB_HOST],
 				kwargs[config_constants.DB_NAME],
@@ -716,7 +722,8 @@ def run_analyze_vacuum(**kwargs):
 				None if config_constants.SSL not in kwargs else kwargs[config_constants.SSL])
 	if master_conn is None:
 		raise Exception("No Connection was established")
-
+		
+		
 	vacuum_flag = kwargs[config_constants.DO_VACUUM] if config_constants.DO_VACUUM in kwargs else False
 	if vacuum_flag is True:
 		# Run vacuum based on the Unsorted , Stats off and Size of the table
